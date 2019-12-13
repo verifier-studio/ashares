@@ -1,0 +1,63 @@
+{
+	"name": "ashares",
+	"displayName": "AShares",
+	"description": "A shares.",
+	"version": "0.0.1",
+	"publisher": "seaweedman",
+	"repository": {
+
+	},
+	"engines": {
+		"vscode": "^1.40.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:extension.ash",
+		"onCommand:extension.ash",
+		"onCommand:extension.closeclose"
+	],
+	"main": "./extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "extension.ash",
+				"title": "ash"
+			},
+			{
+				"command": "extension.closeclose",
+				"title": "closeclose"
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "AStock",
+			"properties": {
+				"astock.code": {
+					"type": "string",
+					"default": "sh600050,sz002351,sh600547",
+					"description": "stock code"
+				}
+			}
+		}
+	},
+	"scripts": {
+		"test": "node ./test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.1.1",
+		"@types/mocha": "^5.2.7",
+		"@types/node": "^12.11.7",
+		"@types/vscode": "^1.40.0",
+		"eslint": "^6.6.0",
+		"glob": "^7.1.5",
+		"mocha": "^6.2.2",
+		"typescript": "^3.6.4",
+		"vscode-test": "^1.2.2"
+	},
+	"dependencies": {
+		"axios": "^0.19.0",
+		"iconv-lite": "^0.5.0"
+	}
+}
