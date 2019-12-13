@@ -12,6 +12,7 @@ const iconv = require('iconv-lite');
  */
 function activate(context) {
 	var statusBar // = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right)
+    var _sleep
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
@@ -40,7 +41,7 @@ function activate(context) {
 
 			var i = 0
 			var len = codeArr.length
-			setInterval(function() {
+			_sleep = setInterval(function() {
 				axios({
 					method: 'get',
 					url: 'http://hq.sinajs.cn/list=' + codeArr[i], // 'http://qt.gtimg.cn/q=sh600519',
@@ -91,6 +92,8 @@ function activate(context) {
 
 	let closeclose = vscode.commands.registerCommand('extension.closeclose', function () {
 		statusBar.dispose()
+
+		clearInterval(_sleep)
 		context.subscriptions.push(disposable)
 	});
 
