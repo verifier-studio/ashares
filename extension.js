@@ -1,103 +1,103 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
 const axios = require('axios');
 const iconv = require('iconv-lite');
-
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
 
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-	var statusBar // = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right)
-    var _sleep
+    var statusBar, loop
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "ashares" is now active!');
+    console.log('Congratulations, your extension "ashares" is now active!');
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with  registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('extension.ash', function () {
-		// The code you place here will be executed every time your command is executed
+    // 定义插件启动命令
+    let disposable = vscode.commands.registerCommand('extension.ash', function () {
+        // 读取配置参数
+        var codes = vscode.workspace.getConfiguration().get('astock.code')
 
-		// Display a message box to the user
-		// vscode.window.showInformationMessage('Hello World!');
+        if (codes != "") { // 股票代码不空
+            // 初始化状态栏对象
+            statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right)
+            statusBar.text = '大牛股正在来的路上……'
+            // 定义状态栏点击事件，点击关闭插件
+            statusBar.command = 'extension.closeclose'
+            statusBar.show()
 
-		// 读取配置参数
-		var codes = vscode.workspace.getConfiguration().get('astock.code')
-        console.log(codes)
+            // 多个股票代码通过逗号截取
+            var codeArr = codes.split(",")
 
-        if (codes != "") {
-			statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right)
-			statusBar.text = '大牛股正在来的路上……'
-			statusBar.command = 'extension.closeclose'
-			statusBar.show()
+            var i = 0, len = codeArr.length
 
-			var codeArr = codes.split(",")
+            // 定时刷新股票数据
+            loop = setInterval(function() {
+                // 请求新浪股票接口获取实时股票信息
+                axios({
+                    method: 'get',
+                    url: 'http://hq.sinajs.cn/list=' + codeArr[i], // 'http://qt.gtimg.cn/q=sh600519',
+                    responseType: 'stream',
+                }).then(function(res) { // 由于新浪接口返回的数据为gbk格式，中文出现乱码，所以进行了繁琐的处理
+                    /* gbk中文乱码处理 start */
+                    var chunks = []
+                    res.data.on('data', chunk=>{
+                        chunks.push(chunk)
+                    })
+                    /* gbk中文乱码处理 end */
 
-			var i = 0
-			var len = codeArr.length
-			_sleep = setInterval(function() {
-				axios({
-					method: 'get',
-					url: 'http://hq.sinajs.cn/list=' + codeArr[i], // 'http://qt.gtimg.cn/q=sh600519',
-					responseType: 'stream',
-				}).then(function(res) {
-					var chunks = []
-					res.data.on('data', chunk=>{
-						chunks.push(chunk)
-					})
+                    res.data.on('end', ()=>{
+                        var buffer = Buffer.concat(chunks)
+                        // 通过iconv来进行转化
+                        var str = iconv.decode(buffer, 'gbk')
+                        /* gbk中文乱码处理 end */
 
-					res.data.on('end', ()=>{
-						var buffer = Buffer.concat(chunks)
-						// 通过iconv来进行转化
-						var str = iconv.decode(buffer, 'gbk')
-						console.log(str)
-	
-						eval(str)
-	
-						var arr = []
-						eval('arr = ' + 'hq_str_' + codeArr[i] + ".split(',')")
-						console.log(arr)
+                        // 接口返回的数据是一串js代码，eval方法直接把字符串当成js代码来执行
+                        // 接口返回的格式类似于 var hq_str_sh600050="中国联通,0.000,5.740,5.740,0.000,0.000,5.750,5.750,0,0.000";
+                        eval(str)
+                        // 将配置参数中的字符串股票代码，通过eval，拼接截取
+                        var arr = []
+                        eval('arr = ' + 'hq_str_' + codeArr[i] + ".split(',')")
 
-						// 涨跌幅（(现价 - 昨日收盘价) / 昨日收盘价）
-						var upup = ((arr[3] - arr[2]) / arr[2] * 100).toFixed(2)
-						statusBar.text = arr[0] + " - " + arr[3] + ' (' + upup + '%)' // - ' + arr[31]
+                        // 涨跌幅（(现价 - 昨日收盘价) / 昨日收盘价）
+                        var upup = ((arr[3] - arr[2]) / arr[2] * 100).toFixed(2)
 
-						statusBar.color = 'gray'
-						if (upup > 0) {
-							statusBar.color = 'red'
-						} else if (upup < 0) {
-							statusBar.color = 'green'
-						}
+                        // 将接口返回的股票信息拼接，赋给状态栏
+                        // arr[0] 股票名称（中文） arr[3] 当前价格 arr[2] 昨日收盘价
+                        statusBar.text = arr[0] + " - " + arr[3] + ' (' + upup + '%)'
 
-						i++
-						if (i >= len) {
+                        // 状态栏颜色处理 平灰 涨红 跌绿
+                        statusBar.color = 'gray'
+                        if (upup > 0) {
+                            statusBar.color = 'red'
+                        } else if (upup < 0) {
+                            statusBar.color = 'green'
+                        }
+
+                        // 多个股票代码，顺序切换
+                        i++
+                        if (i >= len) {
                             i = 0
-						}
+                        }
 
-						// statusBar.command = 'extension.closeclose'
-						statusBar.show()
-					})
-				})
-			}, 3000)
-		} else {
-			vscode.window.showInformationMessage('请先配置股票代码！');
-		}
-	});
+                        // 更新显示在状态栏
+                        statusBar.show()
+                    })
+                })
+            }, 3000) // 每3秒刷新一次
+        } else { // 股票代码为空
+            // 弹窗提示
+            vscode.window.showInformationMessage('请先配置股票代码！');
+        }
+    });
 
-	let closeclose = vscode.commands.registerCommand('extension.closeclose', function () {
-		statusBar.dispose()
+    // 定义关闭方法
+    let closeclose = vscode.commands.registerCommand('extension.closeclose', function () {
+        // 关闭定时器
+        clearInterval(loop)
+        // 回收状态栏
+        statusBar.dispose()
+        context.subscriptions.push(disposable)
+    });
 
-		clearInterval(_sleep)
-		context.subscriptions.push(disposable)
-	});
-
-	context.subscriptions.push(closeclose);
+    context.subscriptions.push(closeclose);
 }
 
 exports.activate = activate;
@@ -106,6 +106,6 @@ exports.activate = activate;
 function deactivate() {}
 
 module.exports = {
-	activate,
-	deactivate
+    activate,
+    deactivate
 }
