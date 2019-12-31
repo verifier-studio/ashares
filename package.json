@@ -33,7 +33,7 @@
 			"properties": {
 				"astock.code": {
 					"type": "string",
-					"default": "sh600050,sz002351,sh600547",
+					"default": "sh600050,sz002351,sh600547,sz002065",
 					"description": "stock code"
 				}
 			}

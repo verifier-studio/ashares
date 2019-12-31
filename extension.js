@@ -1,6 +1,6 @@
-const vscode = require('vscode');
-const axios = require('axios');
-const iconv = require('iconv-lite');
+const vscode = require('vscode')
+const axios = require('axios')
+const iconv = require('iconv-lite')
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -8,7 +8,7 @@ const iconv = require('iconv-lite');
 function activate(context) {
     var statusBar, loop
 
-    console.log('Congratulations, your extension "ashares" is now active!');
+    console.log('Congratulations, your extension "ashares" is now active!')
 
     // 定义插件启动命令
     let disposable = vscode.commands.registerCommand('extension.ash', function () {
@@ -84,7 +84,7 @@ function activate(context) {
             }, 3000) // 每3秒刷新一次
         } else { // 股票代码为空
             // 弹窗提示
-            vscode.window.showInformationMessage('请先配置股票代码！');
+            vscode.window.showInformationMessage('请先配置股票代码！')
         }
     });
 
@@ -97,10 +97,10 @@ function activate(context) {
         context.subscriptions.push(disposable)
     });
 
-    context.subscriptions.push(closeclose);
+    context.subscriptions.push(closeclose)
 }
 
-exports.activate = activate;
+exports.activate = activate
 
 // this method is called when your extension is deactivated
 function deactivate() {}
